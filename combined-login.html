@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Account Login</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Arial,sans-serif;color:#172033;background:#f1f5ff}
+.center{min-height:100vh;display:grid;place-items:center;padding:20px}.card{width:min(440px,100%);background:white;padding:30px;border-radius:20px;box-shadow:0 15px 45px #18294d1c}
+.brand{font-weight:800;color:#4f46e5;margin-bottom:25px}.auth h1{margin:0 0 8px;font-size:28px}.sub{color:#687386;margin:0 0 22px}
+.tabs{display:flex;gap:6px;padding:5px;background:#f1f3f9;border-radius:10px;margin-bottom:20px}.tabs button{flex:1;border:0;padding:11px;border-radius:8px;background:transparent;cursor:pointer;font-weight:700}.tabs .active{background:white;color:#4f46e5}
+.field{margin:14px 0}.hidden{display:none!important}label{display:block;font-weight:700;font-size:14px;margin-bottom:7px}input{width:100%;padding:12px;border:1px solid #d7deea;border-radius:9px;font-size:15px}input:focus{outline:2px solid #c7d2fe;border-color:#6366f1}.err{color:#b91c1c;font-size:13px;margin-top:5px;display:none}.err.show{display:block}
+.submit,.out{border:0;border-radius:10px;padding:13px;background:#4f46e5;color:white;font-size:16px;font-weight:700;cursor:pointer}.submit{width:100%;margin-top:8px}.note{font-size:12px;color:#778195;line-height:1.5;margin-top:20px}
+#home{min-height:100vh;background:#f5f7fb}.topbar{height:68px;background:white;border-bottom:1px solid #e4e8f0;display:flex;align-items:center;justify-content:space-between;padding:0 max(20px,calc((100% - 960px)/2))}.homeMain{max-width:960px;margin:48px auto;padding:0 18px}.hero{border-radius:22px;padding:clamp(28px,6vw,56px);color:white;background:linear-gradient(135deg,#4f46e5,#7c3aed)}.hero h1{font-size:clamp(30px,5vw,48px);margin:10px 0}.hero p{line-height:1.7;color:#eeecff}.panel{background:white;border:1px solid #e5e9f1;padding:24px;border-radius:16px;margin-top:20px;line-height:1.6}
+</style>
+</head>
+<body>
+<section id="authScreen" class="center">
+<main class="card auth">
+<div class="brand">YOUR WEBSITE</div>
+<h1 id="heading">Welcome back</h1><p class="sub" id="subtitle">Sign in to continue to your account.</p>
+<div class="tabs"><button type="button" id="signinTab" class="active">Sign In</button><button type="button" id="signupTab">Create Account</button></div>
+<form id="authForm" novalidate>
+<div class="field hidden" id="nameField"><label for="fullName">Full name</label><input id="fullName" autocomplete="name"><div class="err" id="nameError"></div></div>
+<div class="field"><label for="email">Email address</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com"><div class="err" id="emailError"></div></div>
+<div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" placeholder="At least 8 characters"><div class="err" id="passwordError"></div></div>
+<div class="field hidden" id="confirmField"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password"><div class="err" id="confirmError"></div></div>
+<button class="submit" id="submitButton" type="submit">Sign In</button>
+</form>
+<p class="note">Demo only: account details are stored in this browser. Do not use a real password. Not suitable for production authentication.</p>
+</main>
+</section>
+
+<section id="home" class="hidden">
+<header class="topbar"><div class="brand">YOUR WEBSITE</div><button class="out" id="logout">Sign Out</button></header>
+<main class="homeMain">
+<section class="hero"><p>YOUR ACCOUNT</p><h1>Welcome, <span id="welcomeName">there</span>!</h1><p>You have successfully signed in. This is your home page.</p></section>
+<section class="panel"><h2>Home</h2><p>Your login worked. You can add your profile, settings, and other website features here.</p></section>
+</main>
+</section>
+
+<script>
+const $=id=>document.getElementById(id);let mode="signin";
+function setMode(m){mode=m;const up=m==="signup";$("heading").textContent=up?"Create your account":"Welcome back";$("subtitle").textContent=up?"Fill in your details to get started.":"Sign in to continue to your account.";$("nameField").classList.toggle("hidden",!up);$("confirmField").classList.toggle("hidden",!up);$("signinTab").classList.toggle("active",!up);$("signupTab").classList.toggle("active",up);$("submitButton").textContent=up?"Create Account":"Sign In";clearErrors();}
+function clearErrors(){["nameError","emailError","passwordError","confirmError"].forEach(id=>{$(id).textContent="";$(id).classList.remove("show")})}
+function error(id,msg){$(id).textContent=msg;$(id).classList.add("show")}
+function getAccounts(){try{return JSON.parse(localStorage.getItem("demoAccounts")||"{}")}catch(e){return {}}}
+function showHome(name){$("welcomeName").textContent=name;$("authScreen").classList.add("hidden");$("home").classList.remove("hidden");document.title="Home"}
+function showLogin(){ $("home").classList.add("hidden");$("authScreen").classList.remove("hidden");document.title="Account Login"; }
+$("signinTab").onclick=()=>setMode("signin");$("signupTab").onclick=()=>setMode("signup");
+$("authForm").addEventListener("submit",e=>{
+ e.preventDefault();clearErrors();
+ const name=$("fullName").value.trim(),email=$("email").value.trim().toLowerCase(),pass=$("password").value,confirm=$("confirmPassword").value;
+ let ok=true;
+ if(mode==="signup"&&!name){error("nameError","Enter your name.");ok=false}
+ if(!email){error("emailError","Email is required.");ok=false}else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){error("emailError","Enter a valid email.");ok=false}
+ if(pass.length<8){error("passwordError","Password must be at least 8 characters.");ok=false}
+ if(mode==="signup"&&pass!==confirm){error("confirmError","Passwords do not match.");ok=false}
+ if(!ok){alert("Please correct the highlighted fields.");return}
+ const data=getAccounts();
+ if(mode==="signup"){
+  if(data[email]){alert("An account with this email already exists. Please sign in.");setMode("signin");return}
+  data[email]={name:name,password:pass};localStorage.setItem("demoAccounts",JSON.stringify(data));
+  $("password").value="";$("confirmPassword").value="";setMode("signin");$("email").value=email;
+  alert("Account created! Now sign in with your email and password.");return;
+ }
+ if(!data[email]){alert("No account found. Please select Create Account first.");return}
+ if(data[email].password!==pass){error("passwordError","Incorrect password.");alert("Incorrect password. Please try again.");return}
+ localStorage.setItem("demoCurrentUser",data[email].name);
+ // Switch to the home view in this same HTML file; no separate page/file is needed.
+ showHome(data[email].name);
+});
+$("logout").addEventListener("click",()=>{localStorage.removeItem("demoCurrentUser");showLogin();});
+const existing=localStorage.getItem("demoCurrentUser");if(existing)showHome(existing);
+</script>
+</body></html>
